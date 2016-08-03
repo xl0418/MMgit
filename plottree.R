@@ -2,6 +2,10 @@ library(DDD)
 library(plotly)
 library(MASS)
 library(plot3D)
+library(scatterplot3d)
+library(lattice)
+library(TeachingDemos)
+
 plottree <- function(x,num){
 if(x == 1){
   for(i in 1:100){
@@ -17,8 +21,9 @@ if(x == 1){
   
   try(dev.off())
 
+  }
 }
-else (x==2){
+else if(x==2){
   data = NA
   for(i in 1:100){
     file = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
@@ -32,23 +37,13 @@ else (x==2){
     data0 = cbind(i,brts,c(2:(length(brts)+1)))
     data = rbind(data, data0)
    # try(dev.off())
-   
-    
   }
-  kd <- with(MASS::geyser, MASS::kde2d(duration, waiting, n = 50))
-  with(kd, plot_ly(x = data[,1], y = data[,2], z = data[,3], type = "surface"))
-  
-  
-  plot_ly(z = data, type = "surface")
-  
-  
   x = data[,1]
   y = data[,2]
   z = data[,3]
-  scatter3D(x, y, z, clab = c("Number of", "lineages"))
-  
-}
-  
-  
-}
+  scatter3D(x, y, z,surf = TRUE, clab = c("Number of", "lineages"))
+  # scatterplot3d(x, y, z, type="h",highlight.3d=TRUE, col.axis="blue",col.grid="grey", main="scatterplot3d - 2", pch=16,)
+  # wireframe(data, aspect = c(61/87, 0.4), screen = list(z = 30, x = -60), xlab = "X", ylab = "Y", zlab = "Z")
+
+    }
 }
