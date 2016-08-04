@@ -1,11 +1,6 @@
 library(DDD)
-library(plotly)
 library(MASS)
-library(plot3D)
-library(scatterplot3d)
-library(lattice)
-library(TeachingDemos)
-
+library(rgl)
 plottree <- function(x,num){
 if(x == 1){
   for(i in 1:100){
@@ -41,7 +36,7 @@ else if(x==2){
   }
   data <- data[-1,]
   time = data[order(data[,2]),2]
-  timeu = time[-1,]
+  timeu = unique(time)
   data_lineage = timeu
   for(i in 1:100){
     file = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
@@ -62,7 +57,14 @@ else if(x==2){
   x = data_lineage[,1]
   y = c(1:100)
   z = data_lineage[,2:101]
-  scatter3D(x, y, z,surf = TRUE, clab = c("Number of", "lineages"))
- 
+  zlim <- range(z)
+  zlen <- zlim[2] - zlim[1] + 1
+  colorlut <- terrain.colors(zlen,alpha=0) # height color lookup table
+  col <- colorlut[ z-zlim[1]+1 ] # assign colors to heights for each point
+  open3d()
+  rgl.surface(x, y, z, color=col, alpha=0.75, back="lines")
+  
+  
+  
     }
 }
