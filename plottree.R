@@ -63,8 +63,6 @@ else if(x==2){
   col <- colorlut[ z-zlim[1]+1 ] # assign colors to heights for each point
   open3d()
   rgl.surface(x, y, z, color=col, alpha=0.75, back="lines")
-  
-  
-  
-    }
+  axes3d()
+  }
 }
