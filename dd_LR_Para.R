@@ -1,3 +1,8 @@
+library(foreach)
+library(iterators)
+library(doParallel)
+
+
 dd_LR = function(             
    brts,
    initparsoptDD,
@@ -45,15 +50,29 @@ dd_LR = function(
   cat('Simulating trees under CR and DD models ...\n')
   
   
-  for(mc in 1:endmc)
-  {
-     treeCR[[mc]] = dd_sim(pars = c(parsCR,Inf),age = age,ddmodel = 1)
-     treeDD[[mc]] = dd_sim(pars = parsDD,age = age,ddmodel = 1)
+  # cl <- makeCluster(4)
+  cl <- detectCores()
+  cl <- makeCluster(cl)
+  registerDoParallel(cl)
+  clusterEvalQ(cl, library(DDD))
+  # clusterExport(cl, "fun")
+  
+  
+  fun_sim = function(x){
+     treeCR[[x]] = dd_sim(pars = c(parsCR,Inf),age = age,ddmodel = 1)
+     treeDD[[x]] = dd_sim(pars = parsDD,age = age,ddmodel = 1)
   }
+  clusterExport(cl, c("fun_sim","parsCR","parsDD","age"))
+  VDelta = foreach(x=1:endmc) %dopar% fun_sim(x)
+  stopCluster(cl)
+  
+  
   if(!is.null(outputfilename))
   {
       save(seed,brts,out,treeCR,treeDD,file = outputfilename)
   }
+  
+  
   cat('Performing bootstrap for determining critical LR ...\n')  
   for(mc in 1:endmc)
   {
@@ -84,6 +103,8 @@ dd_LR = function(
         save(seed,brts,out,treeCR,treeDD,file = outputfilename)
      }
   }
+  
+  
   opt = rep(0,endmc)
   cat('Performing bootstrap for determine power ...\n')
   for(mc in 1:endmc)
