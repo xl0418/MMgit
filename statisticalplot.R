@@ -9,7 +9,7 @@ source(file = fileplot)
 # power = rep(0,40)
 p = NA
 power = NA
-for(j in 28:30){
+for(j in 35:35){
   file1 = paste("/Volumes/Liang/Research/data/Modeltestgroup",j,sep = "")
   # file1 = paste(getwd(),"/Desktop/data/Modeltestgroup",j,sep = "")
 for(i in 1:100){
@@ -17,24 +17,24 @@ for(i in 1:100){
   else file = paste(file1,"/analysis",i,".Rdata",sep = "")
   load(file = file)
   # print(paste("pvalue",i," = ",pvalue,"; poweroftest",i," = ",poweroftest,sep = "")) 
-  i <- 100*(j-28)+i
+  i <- 100*(j-35)+i
   p[i] <- pvalue
   power[i] <- poweroftest
 }
   print(length(p))
   print(length(power))
 }
-group = rep(c(0,0.2,0.5),each = 100)
+group = rep(c(0.1,0),each = 100)
 # group = rep(c(50,0.1,0.2,0.15,0.3,0.35,0.4,0.4,10,1,0.8,0.9,1),each = 10)
 p2 = cbind(group, p , power)
 p2 = as.data.frame(p2)
- plot_p <- ggplot(p2, aes(x=factor(group), y=p)) +geom_boxplot()+xlab("Allopatric speciation rate")+ylab("p-value")+#geom_hline(yintercept = 0.05)
+ plot_p <- ggplot(p2, aes(x=factor(group), y=p)) +geom_boxplot()+xlab("Extinction rate")+ylab("p-value")+#geom_hline(yintercept = 0.05)
  geom_hline(aes(yintercept=0.05)) + geom_text(aes(0,0.05,label = 0.05, vjust = 0))
    # + geom_dotplot(binaxis='y', stackdir='center', dotsize=1,binwidth = )
 # p <- ggplot(p2, aes(x=factor(group), y=power)) +geom_boxplot()
 plot_p
 
-plot_power <- ggplot(p2, aes(x=factor(group), y=power)) +geom_boxplot()+xlab("Migration rate")+ylab("p-value")#geom_hline(yintercept = 0.05)
+plot_power <- ggplot(p2, aes(x=factor(group), y=power)) +geom_boxplot()+xlab("Extinction rate")+ylab("power of test")#geom_hline(yintercept = 0.05)
  # geom_hline(aes(yintercept=0.05)) + geom_text(aes(0,0.05,label = 0.05, vjust = 0))
 # + geom_dotplot(binaxis='y', stackdir='center', dotsize=1,binwidth = )
 # p <- ggplot(p2, aes(x=factor(group), y=power)) +geom_boxplot()
