@@ -4,9 +4,9 @@ library(rgl)
 plottree <- function(x,num){
 if(x == 1){
   for(i in 1:100){
-  file = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+  file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
   load(file = file)
-  pdffilename = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
+  pdffilename = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
   pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
   L = result$L
   phy = L2phylo(L)
@@ -21,7 +21,7 @@ if(x == 1){
 else if(x==2){
   data = NA
   for(i in 1:100){
-    file = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
     load(file = file)
    # pdffilename = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
    # pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
@@ -39,7 +39,7 @@ else if(x==2){
   timeu = unique(time)
   data_lineage = timeu
   for(i in 1:100){
-    file = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
     load(file = file)
     # pdffilename = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
     # pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
