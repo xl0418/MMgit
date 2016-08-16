@@ -1,7 +1,7 @@
 library(foreach)
 library(iterators)
 library(doParallel)
-
+library(DDD)
 
 dd_LR = function(             
    brts,
@@ -56,14 +56,22 @@ dd_LR = function(
   registerDoParallel(cl)
   clusterEvalQ(cl, library(DDD))
   # clusterExport(cl, "fun")
+  treeCR = NULL
+  treeDD = NULL
   
   
   fun_sim = function(x){
-     treeCR[[x]] = dd_sim(pars = c(parsCR,Inf),age = age,ddmodel = 1)
-     treeDD[[x]] = dd_sim(pars = parsDD,age = age,ddmodel = 1)
+    # treeCR= diag(x = x, nrow = x)
+    # treeDD=  diag(x = x, nrow = x+1)
+    # return(list(treeCR,treeDD))
+    treeCR = dd_sim(pars = c(parsCR,Inf),age = age,ddmodel = 1)
+     treeDD = dd_sim(pars = parsDD,age = age,ddmodel = 1)
+    return(list(treeCR,treeDD))
+    
   }
-  clusterExport(cl, c("fun_sim","parsCR","parsDD","age"))
-  VDelta = foreach(x=1:endmc) %dopar% fun_sim(x)
+  
+  clusterExport(cl, c("fun_sim","parsCR","parsDD","age","treeCR","treeDD"))
+  tree = foreach(x=1:endmc) %dopar% fun_sim(x)
   stopCluster(cl)
   
   
@@ -73,11 +81,18 @@ dd_LR = function(
   }
   
   
+  
+  # cl <- makeCluster(4)
+  cl <- detectCores()
+  cl <- makeCluster(cl)
+  registerDoParallel(cl)
+  clusterEvalQ(cl, library(DDD))
+  
   cat('Performing bootstrap for determining critical LR ...\n')  
-  for(mc in 1:endmc)
+  fun_CR = function(mc)
   {
      cat('Analyzing simulation:',mc,'\n')
-     brtsCR = branching.times(treeCR[[mc]][[1]])
+     brtsCR = branching.times(tree[[mc]][1][[1]])
      outCR = dd_ML(brtsCR,initparsopt = parsCR,idparsopt = 1:2,idparsfix = 3,parsfix = Inf,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
      outDD1 = dd_ML(brtsCR,initparsopt = parsDD,idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
      outDD2 = dd_ML(brtsCR,initparsopt = c(parsCR + 0.05,length(brts) + 1000),idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
@@ -103,6 +118,11 @@ dd_LR = function(
         save(seed,brts,out,treeCR,treeDD,file = outputfilename)
      }
   }
+  
+  
+  clusterExport(cl, c("fun_sim","parsCR","parsDD","age","treeCR","treeDD"))
+  tree = foreach(mc=1:endmc) %dopar% fun_CR(mc)
+  stopCluster(cl)
   
   
   opt = rep(0,endmc)
