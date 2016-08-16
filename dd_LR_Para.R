@@ -80,7 +80,7 @@ dd_LR = function(
       save(seed,brts,out,treeCR,treeDD,file = outputfilename)
   }
   
-  
+  opt = rep(0,endmc)
   
   # cl <- makeCluster(4)
   cl <- detectCores()
@@ -92,7 +92,7 @@ dd_LR = function(
   fun_CR = function(mc)
   {
      cat('Analyzing simulation:',mc,'\n')
-     brtsCR = branching.times(tree[[mc]][1][[1]])
+     brtsCR = branching.times(tree[[mc]][[1]][1]$tes)
      outCR = dd_ML(brtsCR,initparsopt = parsCR,idparsopt = 1:2,idparsfix = 3,parsfix = Inf,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
      outDD1 = dd_ML(brtsCR,initparsopt = parsDD,idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
      outDD2 = dd_ML(brtsCR,initparsopt = c(parsCR + 0.05,length(brts) + 1000),idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
@@ -112,54 +112,59 @@ dd_LR = function(
      outff = cbind(1,mc,outCR,outDD1,outDD2,LR)
      outff = outff[,-c(5,7,13,19)]
      names(outff) = newnames
-     out = rbind(out,outff)
+     return(outff)
      if(!is.null(outputfilename))
      {
-        save(seed,brts,out,treeCR,treeDD,file = outputfilename)
+        save(seed,brts,outff,treeCR,treeDD,file = outputfilename)
      }
   }
   
+  cat('Performing bootstrap for determine power ...\n')
+  fun_DD = function(mc)
+  {
+    print(mc)
+    brtsDD = branching.times(tree[[mc]][[2]][1]$tes)
+    outCR = dd_ML(brtsDD,initparsopt = parsCR,idparsopt = 1:2, idparsfix = 3,parsfix = Inf,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
+    outDD1 = dd_ML(brtsDD,initparsopt = parsDD,idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
+    outDD2 = dd_ML(brtsDD,initparsopt = c(parsCR + 0.05,length(brts) + 1000), idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
+    if(outDD1$conv == -1 & outDD2$conv == -1)
+    {
+      maxLLDD = outCR$loglik
+      opt[mc] = 1
+    } else if(outDD1$conv != -1 & outDD2$conv == -1)
+    {
+      maxLLDD = outDD1$loglik
+      opt[mc] = 2
+    } else if(outDD1$conv == -1 & outDD2$conv != -1)
+    {
+      maxLLDD = outDD2$loglik
+      opt[mc] = 3
+    } else {
+      maxLLDD = max(outDD1$loglik,outDD2$loglik)
+      opt[mc] = 1 + min(which(c(outDD1$loglik,outDD2$loglik) == maxLLDD))
+    }
+    LR = max(0,maxLLDD - outCR$loglik)
+    outff = cbind(1,mc,outCR,outDD1,outDD2,LR)
+    outff = outff[,-c(5,7,13,19)]
+    names(outff) = newnames
+    return(outff)
+    if(!is.null(outputfilename))
+    {
+      save(seed,brts,outff,treeCR,treeDD,file = outputfilename)
+    }
+  }
   
-  clusterExport(cl, c("fun_sim","parsCR","parsDD","age","treeCR","treeDD"))
-  tree = foreach(mc=1:endmc) %dopar% fun_CR(mc)
+  
+  
+  clusterExport(cl, c("fun_CR","fun_DD","parsCR","parsDD","age","tree","res","ddmodel","missnumspec","cond","btorph" ,"soc" ,"tol","maxiter","changeloglikifnoconv", "optimmethod","opt"))
+  out_CR = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_CR(mc)
+  out_DD = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_DD(mc)
   stopCluster(cl)
   
+  out = rbind(out_CR,out_DD)
   
-  opt = rep(0,endmc)
-  cat('Performing bootstrap for determine power ...\n')
-  for(mc in 1:endmc)
-  {
-     print(mc)
-     brtsDD = branching.times(treeDD[[mc]][[1]])
-     outCR = dd_ML(brtsDD,initparsopt = parsCR,idparsopt = 1:2, idparsfix = 3,parsfix = Inf,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
-     outDD1 = dd_ML(brtsDD,initparsopt = parsDD,idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
-     outDD2 = dd_ML(brtsDD,initparsopt = c(parsCR + 0.05,length(brts) + 1000), idparsopt = 1:3,res = res,ddmodel = ddmodel,missnumspec = missnumspec,cond = cond,btorph = btorph,soc = soc,tol = tol,maxiter = maxiter,changeloglikifnoconv = changeloglikifnoconv, optimmethod = optimmethod)
-     if(outDD1$conv == -1 & outDD2$conv == -1)
-     {
-        maxLLDD = outCR$loglik
-        opt[mc] = 1
-     } else if(outDD1$conv != -1 & outDD2$conv == -1)
-     {
-        maxLLDD = outDD1$loglik
-        opt[mc] = 2
-     } else if(outDD1$conv == -1 & outDD2$conv != -1)
-     {
-        maxLLDD = outDD2$loglik
-        opt[mc] = 3
-     } else {
-        maxLLDD = max(outDD1$loglik,outDD2$loglik)
-        opt[mc] = 1 + min(which(c(outDD1$loglik,outDD2$loglik) == maxLLDD))
-     }
-     LR = max(0,maxLLDD - outCR$loglik)
-     outff = cbind(1,mc,outCR,outDD1,outDD2,LR)
-     outff = outff[,-c(5,7,13,19)]
-     names(outff) = newnames
-     out = rbind(out,outff)
-     if(!is.null(outputfilename))
-     {
-        save(seed,brts,out,treeCR,treeDD,file = outputfilename)
-     }
-  }
+  
+ 
   
   
   
