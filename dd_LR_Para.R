@@ -184,8 +184,8 @@ dd_LR_Para = function(
   out_DD = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_DD(mc)
   stopCluster(cl)
   
-  out = rbind(out_CR,out_DD)
-  
+  out = rbind(out,out_CR,out_DD)
+  print(out)
   
  
   
