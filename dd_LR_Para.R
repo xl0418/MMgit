@@ -3,7 +3,31 @@ library(iterators)
 library(doParallel)
 library(DDD)
 
-dd_LR = function(             
+fun_sim = NULL
+fun_CR = NULL
+fun_DD = NULL
+parsCR = NULL
+parsDD = NULL
+age = NULL
+tree = NULL
+res = NULL
+ddmodel = NULL
+missnumspec = NULL
+cond = NULL
+btorph = NULL
+soc = NULL
+tol = NULL
+maxiter = NULL
+changeloglikifnoconv = NULL
+optimmethod = NULL
+opt = NULL
+treeCR = NULL
+treeDD = NULL
+parsCR = NULL
+parsDD = NULL
+age = NULL
+
+dd_LR_Para = function(             
    brts,
    initparsoptDD,
    initparsoptCR,
@@ -45,8 +69,8 @@ dd_LR = function(
   }
   parsCR = as.numeric(outCRO[1:2])
   parsDD = as.numeric(outDDO[1:3])
-  treeCR = list()
-  treeDD = list()
+  # treeCR = list()
+  # treeDD = list()
   cat('Simulating trees under CR and DD models ...\n')
   
   
@@ -56,8 +80,7 @@ dd_LR = function(
   registerDoParallel(cl)
   clusterEvalQ(cl, library(DDD))
   # clusterExport(cl, "fun")
-  treeCR = NULL
-  treeDD = NULL
+  
   
   
   fun_sim = function(x){
@@ -88,7 +111,6 @@ dd_LR = function(
   registerDoParallel(cl)
   clusterEvalQ(cl, library(DDD))
   
-  cat('Performing bootstrap for determining critical LR ...\n')  
   fun_CR = function(mc)
   {
      cat('Analyzing simulation:',mc,'\n')
@@ -119,7 +141,6 @@ dd_LR = function(
      }
   }
   
-  cat('Performing bootstrap for determine power ...\n')
   fun_DD = function(mc)
   {
     print(mc)
@@ -157,7 +178,9 @@ dd_LR = function(
   
   
   clusterExport(cl, c("fun_CR","fun_DD","parsCR","parsDD","age","tree","res","ddmodel","missnumspec","cond","btorph" ,"soc" ,"tol","maxiter","changeloglikifnoconv", "optimmethod","opt"))
+  cat('Performing bootstrap for determining critical LR ...\n')  
   out_CR = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_CR(mc)
+  cat('Performing bootstrap for determine power ...\n')
   out_DD = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_DD(mc)
   stopCluster(cl)
   
