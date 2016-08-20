@@ -96,11 +96,14 @@ dd_LR_Para = function(
   clusterExport(cl, c("fun_sim","parsCR","parsDD","age","treeCR","treeDD"))
   tree = foreach(x=1:endmc) %dopar% fun_sim(x)
   stopCluster(cl)
+  cat('Simulation done\n')
   
+  # treeCR = lapply(tree,function(xl) xl$1)
+  # treeDD = lapply(tree,function(xl) xl$2)
   
   if(!is.null(outputfilename))
   {
-      save(seed,brts,out,treeCR,treeDD,file = outputfilename)
+      save(seed,brts,out,tree,file = outputfilename)
   }
   
   opt = rep(0,endmc)
@@ -180,18 +183,15 @@ dd_LR_Para = function(
   clusterExport(cl, c("fun_CR","fun_DD","parsCR","parsDD","age","tree","res","ddmodel","missnumspec","cond","btorph" ,"soc" ,"tol","maxiter","changeloglikifnoconv", "optimmethod","opt"))
   cat('Performing bootstrap for determining critical LR ...\n')  
   out_CR = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_CR(mc)
+  cat('Bootstrap for CR done\n')
   cat('Performing bootstrap for determine power ...\n')
   out_DD = foreach(mc=1:endmc,.combine = rbind) %dopar% fun_DD(mc)
+  cat('Bootstrap for DD done\n')
   stopCluster(cl)
   
   out = rbind(out,out_CR,out_DD)
-  print(out)
-  
- 
-  
-  
-  
-  inverse_quantile = function(samples,x)
+  # print(out)
+   inverse_quantile = function(samples,x)
   {
      samplessort = sort(samples)
      pup = which(samplessort > x)
@@ -214,6 +214,7 @@ dd_LR_Para = function(
   poweroftest = 1 - inverse_quantile(out$LR[(endmc + 2):(2 * endmc + 1)],LRalpha)
   if(plotit == TRUE)
   {
+    cat('Plot pdf\n')
       try(dev.off())
       try(dev.off())
       pdffilename = paste(getwd(),'/LR.pdf',sep = '')

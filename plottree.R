@@ -5,8 +5,10 @@ plottree <- function(x,num){
 if(x == 1){
   for(i in 1:100){
   file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+  # file = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/out",i,"sim.Rdata",sep = "")
   load(file = file)
   pdffilename = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
+  # pdffilename = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/tree",i,".pdf",sep = "")
   pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
   L = result$L
   phy = L2phylo(L)
@@ -21,14 +23,15 @@ if(x == 1){
 else if(x==2){
   data = NA
   for(i in 1:100){
-    file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    # file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    file = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/out",i,"sim.Rdata",sep = "")
     load(file = file)
    # pdffilename = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
    # pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
     L = result$L
     tes = L2phylo(L,dropextinct = T)
     brts= -unname(sort(branching.times(tes),decreasing = T))
-    print(length(brts))
+    # print(length(brts))
     data0 = cbind(i,brts,c(2:(length(brts)+1)))
     data = rbind(data, data0)
    # try(dev.off())
@@ -39,7 +42,8 @@ else if(x==2){
   timeu = unique(time)
   data_lineage = timeu
   for(i in 1:100){
-    file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    # file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+    file = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/out",i,"sim.Rdata",sep = "")
     load(file = file)
     # pdffilename = paste(getwd(),"/Dropbox/R/cluster/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
     # pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
