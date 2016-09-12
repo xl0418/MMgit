@@ -190,6 +190,12 @@ dd_LR_Para = function(
   stopCluster(cl)
   
   out = rbind(out,out_CR,out_DD)
+  if(!is.null(outputfilename))
+  {
+    save(seed,brts,out,tree,file = outputfilename)
+  }
+  
+  
   # print(out)
    inverse_quantile = function(samples,x)
   {
