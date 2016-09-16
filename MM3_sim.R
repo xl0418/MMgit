@@ -210,14 +210,15 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       if(t[i+1]>age) break
       loc2 = matrix(0,1,2)
       # Sympatric speciation 
-      if (is.element(A,1:4)){
-        b1<-number2binary(A,4)
-        b2<-2-b1[4]
+      if (is.element(A,1:12)){
+        B = c(1,2,3,4,4,5,5,6,6,7,7,7)
+        b1<-A%%3
+        if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
-        Ntable[i+1,b2] = Ntable[i,b2]+1
+        Ntable[i+1,b1] = Ntable[i,b1]+1
         newL = newL + 1;
         list0 = matrix(linlist,ncol = 2)
-        b3 <- sign(A-2)+2
+        b3 <- B[A]
        # print(b3)
         list1 = linlist[list0[,2]== b3]
        # print(list1)
@@ -226,14 +227,14 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         linlist1 = list2[,1]
        # print(linlist1)
         ranL= DDD::sample2(linlist1,1)
-        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,b2))
-        linlist = rbind(linlist,c(sign(ranL) * newL,b2)) 
-        loc2[1,b2] = 1
-        loctable = rbind(loctable, loc2)
+        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,b1))
+        linlist = rbind(linlist,c(sign(ranL) * newL,b1)) 
+        # loc2[1,b1] = 1
+        # loctable = rbind(loctable, loc2)
       }
       
       #Extinction
-      else if(is.element(A,5:8)) {
+      else if(is.element(A,13:24)) {
         b1<-number2binary(A-4,4)
         b2<-2-b1[4]
         Ntable=rbind(Ntable,Ntable[i,])

@@ -2,6 +2,7 @@ library(DDD)
 library(MASS)
 library(rgl)
 plottree <- function(x,num){
+  # LTT plot
 if(x == 1){
   for(i in 1:100){
   file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
@@ -20,6 +21,8 @@ if(x == 1){
 
   }
 }
+  
+  # 3D surface for simulations
 else if(x==2){
   data = NA
   for(i in 1:100){
