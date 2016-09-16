@@ -153,7 +153,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     
     if (Mac+Mca == 0) {lambdaac= 0}
     else lambdaac=max(lambdaac0/(Mac+Mca),0)
-    birth_event_CA=lambdaac*Nac[i]
+    birth_event_AC=lambdaac*Nac[i]
     
     if (Mbc+Mcb == 0) {lambdabc= 0}
     else lambdabc=max(lambdabc0/(Mbc+Mcb),0)
@@ -199,19 +199,22 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     # migration_event_BCA = 36
     
     
-    probs= c(birth_event_A,birth_event_B,birth_event_C,birth_event_ABa,birth_event_BCb,birth_event_CAc,birth_event_ACa,birth_event_BCb,birth_event_CBc,birth_event_ABCa,birth_event_ABCb,birth_event_ABCc,death_event_A,death_event_B,death_event_C,contraction_event_ABa,contraction_event_BCb,contraction_event_CAc,contraction_event_ACa,contraction_event_BAb,contraction_event_CBc,contraction_event_ABCa,contraction_event_ABCb,contraction_event_ABCc,birth_event_AB,birth_event_BC,birth_event_CA,migration_event_AB,migration_event_AC,migration_event_BA,migration_event_BC,migration_event_CA,migration_event_CB,migration_event_ABC,migration_event_ACB,migration_event_BCA)
+    probs= c(birth_event_A,birth_event_B,birth_event_C,birth_event_ABa,birth_event_BCb,birth_event_CAc,birth_event_ACa,birth_event_BAb,birth_event_CBc,birth_event_ABCa,birth_event_ABCb,birth_event_ABCc,death_event_A,death_event_B,death_event_C,contraction_event_ABa,contraction_event_BCb,contraction_event_CAc,contraction_event_ACa,contraction_event_BAb,contraction_event_CBc,contraction_event_ABCa,contraction_event_ABCb,contraction_event_ABCc,birth_event_AB,birth_event_AC,birth_event_BC,migration_event_AB,migration_event_AC,migration_event_BA,migration_event_BC,migration_event_CA,migration_event_CB,migration_event_ABC,migration_event_ACB,migration_event_BCA)
     
     #Total rate
     TR=sum(probs)
     if(TR==0) break
     else{
+      # print(linlist)
+      # print(Ntable)
+      # print(which(probs < 0))
       A<-DDD::sample2(B,1, prob = probs)
       t[i+1]=t[i]+rexp(1,rate=TR)
       if(t[i+1]>age) break
       loc2 = matrix(0,1,2)
       # Sympatric speciation 
       if (is.element(A,1:12)){
-        B1 = c(1,2,3,4,4,5,5,6,6,7,7,7)
+        B1 = c(1,2,3,4,6,5,5,4,6,7,7,7)
         b1<-A%%3
         if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
@@ -235,18 +238,18 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       #Extinction
       else if(is.element(A,13:24)) {
-        B = c(1,2,3,4,4,5,5,6,6,7,7,7)
+        B1 = c(1,2,3,4,6,5,5,4,6,7,7,7)
         b1<-A%%3
         if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
-        b3 <- B[A-12]
+        b3 <- B1[A-12]
         list0 = matrix(linlist,ncol = 2)
         list1 = linlist[list0[,2]== b3]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
        if(is.element(A,13:15)){
-         Ntable[i+1,b3] = Ntable[i,b3]-1
+         Ntable[i+1,b3] = max(Ntable[i,b3]-1,0)
         L[abs(ranL),4] = t[i+1]
         if(length(L[L[,4]== -1]) == 0) break
         else {
@@ -257,7 +260,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         }
        }
         else{
-          B1 = c(0,0,0,2,1,1,3,3,2,6,5,4)
+          B1 = c(0,0,0,2,3,1,3,1,2,6,5,4)
           b2 <- B1[A-12]
           Ntable[i+1,b3] = Ntable[i,b3]-1
           Ntable[i+1,b2] = Ntable[i,b2]+1
@@ -278,9 +281,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         Ntable[i+1,1] = Ntable[i,1]+1
         Ntable[i+1,2] = Ntable[i,2]+1
         Ntable[i+1,3] = Ntable[i,3]+1
-        Ntable[i+1,4-A1] = Ntable[i,4-A1]-1
+        Ntable[i+1,4-A1] = Ntable[i+1,4-A1]-1
         Ntable[i+1,A1+3] = Ntable[i,A1+3]-1
-        
         newL = newL + 1
         list0 = matrix(linlist,ncol = 2)
         list1 = linlist[list0[,2]==A1+3]
