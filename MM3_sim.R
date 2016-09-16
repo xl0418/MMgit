@@ -2,7 +2,7 @@
 # library(reshape)
 library(DDD)
 source("/Users/mac/Dropbox/R/MigrationModelsim/number2binary.R")
-MM_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*0.4){
+MM3_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*0.4){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -211,14 +211,14 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       loc2 = matrix(0,1,2)
       # Sympatric speciation 
       if (is.element(A,1:12)){
-        B = c(1,2,3,4,4,5,5,6,6,7,7,7)
+        B1 = c(1,2,3,4,4,5,5,6,6,7,7,7)
         b1<-A%%3
         if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,b1] = Ntable[i,b1]+1
         newL = newL + 1;
         list0 = matrix(linlist,ncol = 2)
-        b3 <- B[A]
+        b3 <- B1[A]
        # print(b3)
         list1 = linlist[list0[,2]== b3]
        # print(list1)
@@ -301,22 +301,25 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      
       #Migration
       else {
-        b1<-number2binary(A-9,4)
-        b2<-2-b1[4]
+        Mig1 = c(1,1,2,2,3,3,4,5,6)
+        Mig2 = c(4,5,4,6,5,6,7,7,7)
+        Am = A - 27
+        b2 = Mig1[Am]
+        b3 = Mig2[Am]
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,b2]=Ntable[i,b2]-1
-        Ntable[i+1,3]=Ntable[i,3]+1
+        Ntable[i+1,b3]=Ntable[i,b3]+1
         linlist = matrix(linlist,ncol = 2)
         list1 = linlist[linlist[,2]==b2]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL1 = DDD::sample2(linlist1,1)
-        L[abs(ranL1),5] <- 3
+        L[abs(ranL1),5] <- b3
         v = which(linlist[,1] == ranL1)
-        linlist[v,2] = 3
+        linlist[v,2] = b3
         linlist = linlist[order(linlist[,1]),]
         linlist = matrix(linlist,ncol=2)
-        loctable[abs(ranL1),] = c(1,1)
+        # loctable[abs(ranL1),] = c(1,1)
       }
       if(sum(linlist[,1] < 0) == 0 | sum(linlist[,1] > 0) == 0) 
         { #print("break")
@@ -336,10 +339,11 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   }  
 #   print(Ntable)
 #   print(linlist)
-  
 #   print(head(linlist))
 #   print(head(L))
-  Ltable = cbind(L, loctable)
+  
+  # Ltable = cbind(L, loctable)
+  
   # print(head(Ltable))
   
   if(dim(L)[1]==1)
