@@ -273,24 +273,30 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       # Allopatric speciation in AB
       else if(is.element(A,25:27)) {
+        A1 = A - 24
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,1] = Ntable[i,1]+1
         Ntable[i+1,2] = Ntable[i,2]+1
-        Ntable[i+1,3] = Ntable[i,3]-1
+        Ntable[i+1,3] = Ntable[i,3]+1
+        Ntable[i+1,4-A1] = Ntable[i,4-A1]-1
+        Ntable[i+1,A1+3] = Ntable[i,A1+3]-1
+        
         newL = newL + 1
         list0 = matrix(linlist,ncol = 2)
-        list1 = linlist[list0[,2]==3]
+        list1 = linlist[list0[,2]==A1+3]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
-        L[abs(ranL),5] <- 1
-        loctable[abs(ranL), 2] = 0
+        A2 = c(1,1,2)
+        A3 = c(2,3,3)
+        L[abs(ranL),5] <- A2[A1]
+        # loctable[abs(ranL), 2] = 0
         v = which(linlist[,1] == ranL)
-        linlist[v,2] = 1
-        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,2))
-        linlist = rbind(linlist,c(sign(ranL) * newL,2))  
-        loc2[1,2] = 1 
-        loctable = rbind(loctable,loc2)
+        linlist[v,2] = A2[A1]
+        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,A3[A1]))
+        linlist = rbind(linlist,c(sign(ranL) * newL,A3[A1]))  
+        # loc2[1,2] = 1 
+        # loctable = rbind(loctable,loc2)
       }
      
       #Migration
