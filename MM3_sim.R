@@ -235,16 +235,17 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       #Extinction
       else if(is.element(A,13:24)) {
-        b1<-number2binary(A-4,4)
-        b2<-2-b1[4]
+        B = c(1,2,3,4,4,5,5,6,6,7,7,7)
+        b1<-A%%3
+        if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
-        b3 <- sign(A-6)+2
+        b3 <- B[A-12]
         list0 = matrix(linlist,ncol = 2)
         list1 = linlist[list0[,2]== b3]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
-       if(A==5 | A==6){
+       if(is.element(A,13:15)){
          Ntable[i+1,b3] = Ntable[i,b3]-1
         L[abs(ranL),4] = t[i+1]
         if(length(L[L[,4]== -1]) == 0) break
@@ -256,20 +257,22 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         }
        }
         else{
+          B1 = c(0,0,0,2,1,1,3,3,2,6,5,4)
+          b2 <- B1[A-12]
           Ntable[i+1,b3] = Ntable[i,b3]-1
-          Ntable[i+1,3-b2] = Ntable[i,3-b2]+1
+          Ntable[i+1,b2] = Ntable[i,b2]+1
           L[abs(ranL),5] <- 9-A
           v = which(linlist[,1] == ranL)
-          linlist[v,2] = 9-A
+          linlist[v,2] = b2
           linlist = linlist[order(linlist[,1]),]
           linlist = matrix(linlist,ncol=2)
-          loctable[abs(ranL),A-6] = 0
+          # loctable[abs(ranL),A-6] = 0
         }
       }
       
       
       # Allopatric speciation in AB
-      else if(A== 9) {
+      else if(is.element(A,25:27)) {
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,1] = Ntable[i,1]+1
         Ntable[i+1,2] = Ntable[i,2]+1
