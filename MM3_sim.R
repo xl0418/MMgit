@@ -2,7 +2,7 @@
 # library(reshape)
 library(DDD)
 source("/Users/mac/Dropbox/R/MigrationModelsim/number2binary.R")
-MM3_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*0.4){
+MM3_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*10){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -37,8 +37,12 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   Na = parsN[1]
   Nb = parsN[2]
   Nc = parsN[3]
-  N=Na+Nb+Nc
-  Ntable = cbind(Na,Nb,Nc)
+  Nab = parsN[4]
+  Nac = parsN[5]
+  Nbc = parsN[6]
+  Nabc = parsN[7]
+  N=sum(parsN)
+  Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nbc,Nabc)
   i=0
   # L : Ltable used in L2phylo function of DDD package 
   # L = data structure for lineages,
@@ -55,12 +59,21 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     loc = which(Ntable[1,]!=0)
     L = rbind(L, c(0, 1-j, (-1)^j*j, -1, loc[1]))
     L = matrix(L, ncol = 5)
-    if(is.element(loc,1:2)[1]){
-      loc1= matrix(0,1,2)
+    if(is.element(loc,1:3)[1]){
+      loc1= matrix(0,1,3)
       loc1[1,loc[1]] = 1 
     }
+    else if(is.element(loc,4)) {
+      loc1 = matrix(data = c(1,1,0),1,3)
+    }
+    else if(is.element(loc,5)) {
+      loc1 = matrix(data = c(1,0,1),1,3)
+    }
+    else if(is.element(loc,6)) {
+      loc1 = matrix(data = c(0,1,1),1,3)
+    }
     else {
-      loc1 = matrix(1,1,2)
+      loc1 = matrix(data = c(1,1,1),1,3)
     }
     loctable = rbind(loctable, loc1)
     linlist = cbind(L[,3], L[,5])
@@ -68,9 +81,9 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     newL=j
   }
   # print(loctable)
-  
-  Nab = Nac = Nbc =Nabc = 0
   Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nbc,Nabc)
+  
+  
   while(t[i+1]< age){
     i<-i+1
    # print(t[i])
@@ -211,7 +224,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       A<-DDD::sample2(B,1, prob = probs)
       t[i+1]=t[i]+rexp(1,rate=TR)
       if(t[i+1]>age) break
-      loc2 = matrix(0,1,2)
+      loc2 = matrix(0,1,3)
       # Sympatric speciation 
       if (is.element(A,1:12)){
         B1 = c(1,2,3,4,6,5,5,4,6,7,7,7)
@@ -232,8 +245,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         ranL= DDD::sample2(linlist1,1)
         L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,b1))
         linlist = rbind(linlist,c(sign(ranL) * newL,b1)) 
-        # loc2[1,b1] = 1
-        # loctable = rbind(loctable, loc2)
+        loc2[1,b1] = 1
+        loctable = rbind(loctable, loc2)
       }
       
       #Extinction
@@ -248,6 +261,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
+        loctable[abs(ranL),b1] = 0
        if(is.element(A,13:15)){
          Ntable[i+1,b3] = max(Ntable[i,b3]-1,0)
         L[abs(ranL),4] = t[i+1]
@@ -264,7 +278,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
           b2 <- B1[A-12]
           Ntable[i+1,b3] = Ntable[i,b3]-1
           Ntable[i+1,b2] = Ntable[i,b2]+1
-          L[abs(ranL),5] <- 9-A
+          L[abs(ranL),5] <- b2
           v = which(linlist[,1] == ranL)
           linlist[v,2] = b2
           linlist = linlist[order(linlist[,1]),]
@@ -292,19 +306,20 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         A2 = c(1,1,2)
         A3 = c(2,3,3)
         L[abs(ranL),5] <- A2[A1]
-        # loctable[abs(ranL), 2] = 0
+        loctable[abs(ranL), A3[A1]] = 0
         v = which(linlist[,1] == ranL)
         linlist[v,2] = A2[A1]
         L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,A3[A1]))
         linlist = rbind(linlist,c(sign(ranL) * newL,A3[A1]))  
-        # loc2[1,2] = 1 
-        # loctable = rbind(loctable,loc2)
+         loc2[1,A2[A1]] = 1 
+         loctable = rbind(loctable,loc2)
       }
      
       #Migration
       else {
         Mig1 = c(1,1,2,2,3,3,4,5,6)
         Mig2 = c(4,5,4,6,5,6,7,7,7)
+        Mig3 = c(2,3,1,3,1,2,3,2,1)
         Am = A - 27
         b2 = Mig1[Am]
         b3 = Mig2[Am]
@@ -321,7 +336,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         linlist[v,2] = b3
         linlist = linlist[order(linlist[,1]),]
         linlist = matrix(linlist,ncol=2)
-        # loctable[abs(ranL1),] = c(1,1)
+         loctable[abs(ranL1),Mig3[Am]] = 1
       }
       if(sum(linlist[,1] < 0) == 0 | sum(linlist[,1] > 0) == 0) 
         { #print("break")
@@ -358,7 +373,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
  # print(L)
   tes = L2phylo(L,dropextinct = T)
   tas = L2phylo(L,dropextinct = F)
-  out = list(tes = tes,tas = tas,L = L)
+  out = list(tes = tes,tas = tas,L = L, loctable = loctable)
 #    file = paste("/Users/mac/Dropbox/R/MigrationModelsim/ModelTest/",parsN[1],parsN[2],parsN[3],"&",pars[1],pars[2],pars[3],"&",age,"sim.txt")
 #    save(out,file = file)
    return(out)
