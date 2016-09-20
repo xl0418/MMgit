@@ -1,6 +1,7 @@
 library(DDD)
 library(MASS)
 library(rgl)
+library(stringr)
 plottree <- function(x,num){
   # LTT plot
 if(x == 1){
@@ -14,6 +15,10 @@ if(x == 1){
   L = result$L
   phy = L2phylo(L)
   phy$tip.label = L[which(L[,4] == -1),5]
+  
+  # loc = result$loctable
+  # loc_lable = paste(loc[,1],loc[,2],loc[,3])
+  # phy$tip.label = loc_lable
   plot(phy)
   ltt.plot(result$tes)
   
