@@ -1,8 +1,8 @@
 # library(ggplot2)
 # library(reshape)
 library(DDD)
-source("/Users/mac/Dropbox/R/MigrationModelsim/number2binary.R")
-MMM_sim<-function(n,parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*10){
+source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
+MM4_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*10){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -10,10 +10,12 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   lambda0 = pars[1]
   mu0 = pars[2]
   K = pars[3]
-  Ka= lambda0*K/(lambda0 - mu0)
-  K_loc = rep(Ka,n)
-  Kb = Ka
-  Kc = Ka
+  K= lambda0*K/(lambda0 - mu0)
+  K_loc = rep(K,4)
+  Ka = K_loc[1]
+  Kb = K_loc[2]
+  Kc = K_loc[3]
+  Kd = K_loc[4]
   t <- 0
   # Na : number of species in location A
   # Nb : number of species in location B
@@ -24,24 +26,47 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   # lambdaab0 : allopatric speciation parameter 
   # mu0 : initial extinction rate  
   # mui : initial extinction rate in location i
-  mu = rep(mu0,n)
+  mu = rep(mu0,4)
   
-  lambdaab0 = lambda_allo
-  lambdaac0 = lambda_allo
-  lambdabc0 = lambda_allo
   # M0 : initial migration rate
   # string of events
   #B<- c("spec A","spec B","allo spec","ext A","ext B", "ext AB", "mig AB", "mig BA", "con A", "con B", "sym spec A", "sym spec B")
-  B<- c(1:36)
+  
+  #number of events
+  #sym spec
+  n = 4
+  num_ss = 0
+  for(i in 1:(n-1))
+  {
+    num_ss = num_ss+choose(n-1,i)
+  }
+  num_ss = n*(1+num_ss)
+  
+  #ext 
+  num_ext = num_ss
+  
+  #allo spec
+  num_as = choose(n,2)
+  
+  #mig 
+  num_mig = 0
+  for(i in 1:(n-1)){
+    num_mig = num_mig + choose(n,i)*(n-i)
+  }
+  
+  #number of events
+  num_event = num_ss + num_ext + num_as + num_mig
+  
+  B<- c(1:num_event)
+  
   Na = parsN[1]
   Nb = parsN[2]
   Nc = parsN[3]
-  Nab = parsN[4]
-  Nac = parsN[5]
-  Nbc = parsN[6]
-  Nabc = parsN[7]
+  Nd = parsN[4]
+  Nab=Nac=Nad=Nbc=Nbd=Nabc=Nabd=Nbcd=Nabcd=0
+  
   N=sum(parsN)
-  Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nbc,Nabc)
+  Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nad,Nbc,Nbd,Nabc,Nabd,Nbcd,Nabcd)
   i=0
   # L : Ltable used in L2phylo function of DDD package 
   # L = data structure for lineages,
@@ -58,30 +83,15 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     loc = which(Ntable[1,]!=0)
     L = rbind(L, c(0, 1-j, (-1)^j*j, -1, loc[1]))
     L = matrix(L, ncol = 5)
-    if(is.element(loc,1:3)[1]){
-      loc1= matrix(0,1,3)
-      loc1[1,loc[1]] = 1 
-    }
-    else if(is.element(loc,4)) {
-      loc1 = matrix(data = c(1,1,0),1,3)
-    }
-    else if(is.element(loc,5)) {
-      loc1 = matrix(data = c(1,0,1),1,3)
-    }
-    else if(is.element(loc,6)) {
-      loc1 = matrix(data = c(0,1,1),1,3)
-    }
-    else {
-      loc1 = matrix(data = c(1,1,1),1,3)
-    }
+    loc1= matrix(0,1,4)
+    loc1[1,loc[1]] = 1 
     loctable = rbind(loctable, loc1)
     linlist = cbind(L[,3], L[,5])
     Ntable[1,loc[1]] = Ntable[1,loc[1]] -1 
-    newL=j
   }
   # print(loctable)
-  Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nbc,Nabc)
-  
+  Ntable = cbind(Na,Nb,Nc,Nd,Nab,Nac,Nad,Nbc,Nbd,Ncd,Nabc,Nabd,Nacd,Nbcd,Nabcd)
+  Ntable_index = Nindex(n)
   
   while(t[i+1]< age){
     i<-i+1
@@ -89,12 +99,37 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     Na = Ntable[,1]
     Nb = Ntable[,2]
     Nc = Ntable[,3]
-    Nab = Ntable[,4]
-    Nac = Ntable[,5]
-    Nbc = Ntable[,6]
-    Nabc = Ntable[,7]
+    Nd = Ntable[,4]
+    Nab = Ntable[,5]
+    Nac = Ntable[,6]
+    Nad = Ntable[,7]
+    Nbc = Ntable[,8]
+    Nbd = Ntable[,9]
+    Ncd = Ntable[,10]
+    Nabc = Ntable[,11]
+    Nabd = Ntable[,12]
+    Nacd = Ntable[,13]
+    Nbcd = Ntable[,14]
+    Nabcd = Ntable[,15]
+    
+    
+    num_1 = 0
+    for(i in 1:(n-1))
+    {
+      num_1 = num_1 +choose(n-1,i)
+    }
+    num_1 = num_1 +1
+    
+    probs = rep(0,num_event)
+    
     # speciation event in A
-    lambdaNa=max(lambda0*(1-(Na[i]+Nab[i]+Nac[i]+Nabc[i])/Ka),0)
+    lambdaNa=max(lambda0*(1-(Na[i]+Nab[i]+Nac[i]+Nad[i] +Nabc[i] +Nabd[i] +Nacd[i] +Nabcd[i] )/Ka),0)
+    for(i in 1:length(parsN)){
+      for(j in 1:num_1){
+        probs[i+n*(j-1)]=lambdaNa*
+      }
+    }
+    
     birth_event_A=lambdaNa*Na[i]
     birth_event_ABa=lambdaNa*Nab[i]
     birth_event_ACa=lambdaNa*Nac[i]
