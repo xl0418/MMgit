@@ -2,7 +2,8 @@
 # library(reshape)
 library(DDD)
 source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
-MM4_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo=0.2, M0=(M == 1)*10){
+source("/Users/mac/Dropbox/R/MMgit/event_matrix.R")
+MM4_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo0=0.2, M0=(M == 1)*10){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -26,7 +27,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   # lambdaab0 : allopatric speciation parameter 
   # mu0 : initial extinction rate  
   # mui : initial extinction rate in location i
-  mu = rep(mu0,4)
+  mu = rep(mu0,n)
   
   # M0 : initial migration rate
   # string of events
@@ -65,8 +66,12 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   Nd = parsN[4]
   Nab=Nac=Nad=Nbc=Nbd=Nabc=Nabd=Nbcd=Nabcd=0
   
+  
   N=sum(parsN)
-  Ntable = cbind(Na,Nb,Nc,Nab,Nac,Nad,Nbc,Nbd,Nabc,Nabd,Nbcd,Nabcd)
+  Ntable_index = Nindex(n)
+  Nlength = sum(Ntable_index)
+  Ntable = matrix(0,nrow =1, ncol =Nlength)
+  Ntable[1:n] = parsN
   i=0
   # L : Ltable used in L2phylo function of DDD package 
   # L = data structure for lineages,
@@ -91,7 +96,12 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   }
   # print(loctable)
   Ntable = cbind(Na,Nb,Nc,Nd,Nab,Nac,Nad,Nbc,Nbd,Ncd,Nabc,Nabd,Nacd,Nbcd,Nabcd)
-  Ntable_index = Nindex(n)
+  
+  spec_num = sum(Nindex(n)[1,])
+   N_loc = matrix(0,nrow = n,ncol = spec_num)
+  Ndistribution = event_matrix(n)
+  
+  
   
   while(t[i+1]< age){
     i<-i+1
@@ -122,91 +132,50 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     
     probs = rep(0,num_event)
     
-    # speciation event in A
-    lambdaNa=max(lambda0*(1-(Na[i]+Nab[i]+Nac[i]+Nad[i] +Nabc[i] +Nabd[i] +Nacd[i] +Nabcd[i] )/Ka),0)
-    for(i in 1:length(parsN)){
-      for(j in 1:num_1){
-        probs[i+n*(j-1)]=lambdaNa*
-      }
+    # speciation event & extinction event
+    lambda_sym = rep(0,n)
+    mu = rep(mu0,n)
+    
+    sym_spec_event = matrix(0,nrow = n,ncol = spec_num)
+    ext_event = matrix(0,nrow = n,ncol = spec_num)
+    
+    for(j in 1:n){
+      N_loc[j,] = Ntable[i,which(Ndistribution[j,]==1)]
+      lambda_sym[j]=max(lambda0*(1-sum(N_loc[j,])/Ka),0)
+      sym_spec_event[j,] = lambda_sym[j]*N_loc[j,] 
+      ext_event[j,] = mu[j] *N_loc[j,]
     }
+    prob_spec_sym = c(t(sym_spec_event))
+    prob_ext = c(t(ext_event))
     
-    birth_event_A=lambdaNa*Na[i]
-    birth_event_ABa=lambdaNa*Nab[i]
-    birth_event_ACa=lambdaNa*Nac[i]
-    birth_event_ABCa=lambdaNa*Nabc[i]
-    
-    # speciation event in B
-    lambdaNb=max(lambda0*(1-(Nb[i]+Nab[i]+Nbc[i]+Nabc[i])/Kb),0)
-    birth_event_B=lambdaNb*Nb[i]
-    birth_event_BCb=lambdaNa*Nbc[i]
-    birth_event_BAb=lambdaNa*Nab[i]
-    birth_event_ABCb=lambdaNa*Nabc[i]
-    
-    # speciation event in C
-    lambdaNc=max(lambda0*(1-(Nc[i]+Nac[i]+Nbc[i]+Nabc[i])/Kc),0)
-    birth_event_C=lambdaNc*Nc[i]
-    birth_event_CAc=lambdaNc*Nac[i]
-    birth_event_CBc=lambdaNc*Nbc[i]
-    birth_event_ABCc=lambdaNc*Nabc[i]
-    
-    # Extinction event in A
-    death_event_A=mua*Na[i]
-    contraction_event_ABa=mua*Nab[i]
-    contraction_event_ACa=mua*Nac[i]
-    contraction_event_ABCa=mua*Nabc[i]
-    
-    
-    # Extinction event in B
-    death_event_B=mub*Nb[i]
-    contraction_event_BCb=mua*Nbc[i]
-    contraction_event_BAb=mua*Nab[i]
-    contraction_event_ABCb=mua*Nabc[i]
-    
-    # Extinction event in C
-    death_event_C=muc*Nc[i]
-    contraction_event_CAc=muc*Nac[i]
-    contraction_event_CBc=muc*Nbc[i]
-    contraction_event_ABCc=muc*Nabc[i]
-    
-    
+  
     # Migration 
+    prob_mig = NULL
+    Mig_dir = rep(0,n)
+    for(j in 1:n){
+      Mig_dir[j] = max(M0*((1-sum(N_loc[j,])/Ka)),0)
+    }
+    for(j in 1:(ncol(Ntable)-1)){
+      tar = which(Ndistribution[,j]==0)
+      prob_mig_each = Ntable[i,j]*Mig_dir[tar]
+      prob_mig_each = matrix(prob_mig_each,ncol = length(prob_mig_each))
+      prob_mig = cbind(prob_mig,prob_mig_each)
+      }
     
-    Mab=max(M0*(1-(Nb[i]+Nab[i]+Nbc[i]+Nabc[i])/Kb),0)
-    migration_event_AB=Mab*Na[i]
-    Mac=max(M0*(1-(Nc[i]+Nac[i]+Nbc[i]+Nabc[i])/Kc),0)
-    migration_event_AC=Mac*Na[i]
     
-    Mba=max(M0*(1-(Na[i]+Nab[i]+Nac[i]+Nabc[i])/Ka),0)
-    migration_event_BA=Mba*Nb[i]
-    Mbc=max(M0*(1-(Nc[i]+Nbc[i]+Nac[i]+Nabc[i])/Kc),0)
-    migration_event_BC=Mbc*Nb[i]
-    
-    Mca=max(M0*(1-(Na[i]+Nab[i]+Nac[i]+Nabc[i])/Ka),0)
-    migration_event_CA=Mca*Nc[i]
-    Mcb=max(M0*(1-(Nb[i]+Nbc[i]+Nab[i]+Nabc[i])/Kb),0)
-    migration_event_CB=Mcb*Nc[i]
-    
-    Mabc=max(M0*(1-(Nc[i]+Nbc[i]+Nac[i]+Nabc[i])/Kc),0)
-    migration_event_ABC=Mabc*Nab[i]
-    Macb=max(M0*(1-(Nb[i]+Nbc[i]+Nab[i]+Nabc[i])/Kb),0)
-    migration_event_ACB=Macb*Nac[i]
-    Mbca=max(M0*(1-(Na[i]+Nab[i]+Nac[i]+Nabc[i])/Ka),0)
-    migration_event_BCA=Mbca*Nbc[i]
-    
-    # Allopatric speciation event in AB
-     if (Mab+Mba == 0) {lambdaab= 0}
-     else lambdaab=max(lambdaab0/(Mab+Mba),0)
-    birth_event_AB=lambdaab*Nab[i]
-    
-    if (Mac+Mca == 0) {lambdaac= 0}
-    else lambdaac=max(lambdaac0/(Mac+Mca),0)
-    birth_event_AC=lambdaac*Nac[i]
-    
-    if (Mbc+Mcb == 0) {lambdabc= 0}
-    else lambdabc=max(lambdabc0/(Mbc+Mcb),0)
-    birth_event_BC=lambdabc*Nbc[i]
+    # Allopatric speciation event
+    lambda_allo = NULL
+    N_allo = colSums(Ndistribution)
+    allo_index = which(N_allo == 2)
+    for(j in allo_index){
+      lambda_allo_each = max(lambda_allo0/sum(Mig_dir[which(Ndistribution[,j] == 1)]), 0 )
+      lambda_allo = cbind(lambda_allo_each,lambda_allo)
+    }
+    prob_spec_allo = lambda_allo
    
-   
+    
+    
+    
     # Probabilities for each event
     # birth_event_A = 1
     # birth_event_B = 2
@@ -246,8 +215,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     # migration_event_BCA = 36
     
     
-    probs= c(birth_event_A,birth_event_B,birth_event_C,birth_event_ABa,birth_event_BCb,birth_event_CAc,birth_event_ACa,birth_event_BAb,birth_event_CBc,birth_event_ABCa,birth_event_ABCb,birth_event_ABCc,death_event_A,death_event_B,death_event_C,contraction_event_ABa,contraction_event_BCb,contraction_event_CAc,contraction_event_ACa,contraction_event_BAb,contraction_event_CBc,contraction_event_ABCa,contraction_event_ABCb,contraction_event_ABCc,birth_event_AB,birth_event_AC,birth_event_BC,migration_event_AB,migration_event_AC,migration_event_BA,migration_event_BC,migration_event_CA,migration_event_CB,migration_event_ABC,migration_event_ACB,migration_event_BCA)
-    
+    probs= c(prob_spec_sym,prob_ext,prob_mig,prob_spec_allo)
     #Total rate
     TR=sum(probs)
     if(TR==0) break
