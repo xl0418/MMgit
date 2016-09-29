@@ -64,7 +64,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   Nb = parsN[2]
   Nc = parsN[3]
   Nd = parsN[4]
-  Nab=Nac=Nad=Nbc=Nbd=Nabc=Nabd=Nbcd=Nabcd=0
+  Nab=Nac=Nad=Nbc=Nbd= Ncd=Nabc=Nabd=Nacd = Nbcd=Nabcd=0
   
   
   N=sum(parsN)
@@ -93,16 +93,37 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     loctable = rbind(loctable, loc1)
     linlist = cbind(L[,3], L[,5])
     Ntable[1,loc[1]] = Ntable[1,loc[1]] -1 
+    newL=j
   }
   # print(loctable)
   Ntable = cbind(Na,Nb,Nc,Nd,Nab,Nac,Nad,Nbc,Nbd,Ncd,Nabc,Nabd,Nacd,Nbcd,Nabcd)
   
   spec_num = sum(Nindex(n)[1,])
    N_loc = matrix(0,nrow = n,ncol = spec_num)
-  Ndistribution = event_matrix(n)
+   N_loc_col = matrix(0,nrow = n,ncol = spec_num)
+     Ndistribution = event_matrix(n)
   
-  
-  
+     #index for sym speciation
+     for(j in 1:n){
+     N_loc_col[j,] = which(Ndistribution[j,] == 1,arr.ind = TRUE)#index of each loc in sym spec table
+     }
+     B_symspec = c(N_loc_col)
+     #index for extinction
+     B_ext = NULL
+     x = Ndistribution
+     y = split(x, rep(1:ncol(x), each = nrow(x)))
+     for(j in 1:n){
+       x1 = x
+       x1[j,] = x1[j,]-1
+       y1 = split(x1, rep(1:ncol(x1), each = nrow(x1)))
+       z = match(y1,y)
+       z = z[!is.na(z)]
+       B_ext = rbind(B_ext, z)
+     }
+     B_ext = c(B_ext)
+     
+     
+  i = 0
   while(t[i+1]< age){
     i<-i+1
    # print(t[i])
@@ -124,9 +145,9 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     
     
     num_1 = 0
-    for(i in 1:(n-1))
+    for(m in 1:(n-1))
     {
-      num_1 = num_1 +choose(n-1,i)
+      num_1 = num_1 +choose(n-1,m)
     }
     num_1 = num_1 +1
     
@@ -140,13 +161,13 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     ext_event = matrix(0,nrow = n,ncol = spec_num)
     
     for(j in 1:n){
-      N_loc[j,] = Ntable[i,which(Ndistribution[j,]==1)]
+      N_loc[j,] = Ntable[i,which(Ndistribution[j,]==1)]  #number of each loc in sym spec table
       lambda_sym[j]=max(lambda0*(1-sum(N_loc[j,])/Ka),0)
       sym_spec_event[j,] = lambda_sym[j]*N_loc[j,] 
       ext_event[j,] = mu[j] *N_loc[j,]
     }
-    prob_spec_sym = c(t(sym_spec_event))
-    prob_ext = c(t(ext_event))
+    prob_spec_sym = c(sym_spec_event)
+    prob_ext = c(ext_event)
     
   
     # Migration 
@@ -226,17 +247,17 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       A<-DDD::sample2(B,1, prob = probs)
       t[i+1]=t[i]+rexp(1,rate=TR)
       if(t[i+1]>age) break
-      loc2 = matrix(0,1,3)
+      loc2 = matrix(0,1,n)
+     
       # Sympatric speciation 
-      if (is.element(A,1:12)){
-        B1 = c(1,2,3,4,6,5,5,4,6,7,7,7)
-        b1<-A%%3
-        if(b1 == 0) b1 = 3
+      if (is.element(A,1:length(prob_spec_sym))){
+        b1<-A%%n
+        if(b1 == 0) b1 = n
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,b1] = Ntable[i,b1]+1
         newL = newL + 1;
         list0 = matrix(linlist,ncol = 2)
-        b3 <- B1[A]
+        b3 <- B_symspec[A]
        # print(b3)
         list1 = linlist[list0[,2]== b3]
        # print(list1)
@@ -252,19 +273,18 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       }
       
       #Extinction
-      else if(is.element(A,13:24)) {
-        B1 = c(1,2,3,4,6,5,5,4,6,7,7,7)
-        b1<-A%%3
+      else if(is.element(A,(length(prob_spec_sym)+1):(length(prob_spec_sym)+length(prob_ext)))) {
+        b1<-A%%n
         if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
-        b3 <- B1[A-12]
+        b3 <- B1[A-length(prob_spec_sym)]
         list0 = matrix(linlist,ncol = 2)
         list1 = linlist[list0[,2]== b3]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
         loctable[abs(ranL),b1] = 0
-       if(is.element(A,13:15)){
+       if(is.element(A,(length(prob_spec_sym)+1):(length(prob_spec_sym)+n))){
          Ntable[i+1,b3] = max(Ntable[i,b3]-1,0)
         L[abs(ranL),4] = t[i+1]
         if(length(L[L[,4]== -1]) == 0) break
@@ -276,8 +296,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         }
        }
         else{
-          B1 = c(0,0,0,2,3,1,3,1,2,6,5,4)
-          b2 <- B1[A-12]
+          b2 <- B_ext[A-length(prob_spec_sym)-n]
           Ntable[i+1,b3] = Ntable[i,b3]-1
           Ntable[i+1,b2] = Ntable[i,b2]+1
           L[abs(ranL),5] <- b2
