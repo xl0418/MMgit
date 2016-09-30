@@ -3,7 +3,7 @@
 library(DDD)
 source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
 source("/Users/mac/Dropbox/R/MMgit/event_matrix.R")
-MM4_sim<-function(parsN,age=100,pars ,M = 1,  lambda_allo0=0.2, M0=(M == 1)*10){
+MM4_sim<-function(n,parsN,age=100,pars ,M = 1,  lambda_allo0=0.2, M0=(M == 1)*10){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -12,11 +12,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   mu0 = pars[2]
   K = pars[3]
   K= lambda0*K/(lambda0 - mu0)
-  K_loc = rep(K,4)
-  Ka = K_loc[1]
-  Kb = K_loc[2]
-  Kc = K_loc[3]
-  Kd = K_loc[4]
+  K_loc = rep(K,n)
+ 
   t <- 0
   # Na : number of species in location A
   # Nb : number of species in location B
@@ -122,7 +119,28 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      }
      B_ext = c(B_ext)
      
+     #index for allo speciation
+     lambda_allo = NULL
+     N_allo = colSums(Ndistribution)
+     allo_index = which(N_allo == 2)
+     allo_col = which(Ndistribution[,allo_index] == 1,arr.ind = TRUE)
+     B_allospec = matrix(allo_col[,1],2)
+     B_allodau1 = c(B_allospec[1,])
+     B_allodau2 = c(B_allospec[2,])
      
+     #index for migration
+     B_mig_target = which(Ndistribution == 0, arr.ind = TRUE)
+     B_mig_from = c(B_mig_target[,2])
+     B_mig_to = c(B_mig_target[,1])
+    
+     B_mig_bec = NULL
+     for(j in 1:length(B_mig_from)){
+       Ndis_aftermig = Ndistribution
+       Ndis_aftermig[B_mig_to[j],B_mig_from[j]] = 1
+       loc_aftermig = as.vector(Ndis_aftermig[,B_mig_from[j]])
+       B_mig_bec = c(B_mig_bec,which(sapply( y ,function(x)all(x==loc_aftermig))))
+     }
+     B_mig_bec = as.numeric(B_mig_bec)
   i = 0
   while(t[i+1]< age){
     i<-i+1
@@ -162,7 +180,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     
     for(j in 1:n){
       N_loc[j,] = Ntable[i,which(Ndistribution[j,]==1)]  #number of each loc in sym spec table
-      lambda_sym[j]=max(lambda0*(1-sum(N_loc[j,])/Ka),0)
+      lambda_sym[j]=max(lambda0*(1-sum(N_loc[j,])/K_loc[j]),0)
       sym_spec_event[j,] = lambda_sym[j]*N_loc[j,] 
       ext_event[j,] = mu[j] *N_loc[j,]
     }
@@ -174,7 +192,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     prob_mig = NULL
     Mig_dir = rep(0,n)
     for(j in 1:n){
-      Mig_dir[j] = max(M0*((1-sum(N_loc[j,])/Ka)),0)
+      Mig_dir[j] = max(M0*((1-sum(N_loc[j,])/K_loc[j])),0)
     }
     for(j in 1:(ncol(Ntable)-1)){
       tar = which(Ndistribution[,j]==0)
@@ -236,7 +254,11 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     # migration_event_BCA = 36
     
     
-    probs= c(prob_spec_sym,prob_ext,prob_mig,prob_spec_allo)
+    probs= c(prob_spec_sym,prob_ext,prob_spec_allo,prob_mig)
+    probs_part1 = length(prob_spec_sym)
+    probs_part2 = length(prob_ext)
+    probs_part3 = length(prob_spec_allo)
+    probs_part4 = length(prob_mig)
     #Total rate
     TR=sum(probs)
     if(TR==0) break
@@ -250,7 +272,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       loc2 = matrix(0,1,n)
      
       # Sympatric speciation 
-      if (is.element(A,1:length(prob_spec_sym))){
+      if (is.element(A,1:prob_part1)){
         b1<-A%%n
         if(b1 == 0) b1 = n
         Ntable=rbind(Ntable,Ntable[i,])
@@ -273,7 +295,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       }
       
       #Extinction
-      else if(is.element(A,(length(prob_spec_sym)+1):(length(prob_spec_sym)+length(prob_ext)))) {
+      else if(is.element(A,(probs_part1+1):(probs_part1+probs_part2))) {
         b1<-A%%n
         if(b1 == 0) b1 = 3
         Ntable=rbind(Ntable,Ntable[i,])
@@ -310,38 +332,36 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       
       # Allopatric speciation in AB
-      else if(is.element(A,25:27)) {
-        A1 = A - 24
+      else if(is.element(A,((probs_part1+probs_part2)+1):(probs_part1+probs_part2+probs_part3))) {
+        A1 = A - (probs_part1+probs_part2)
         Ntable=rbind(Ntable,Ntable[i,])
-        Ntable[i+1,1] = Ntable[i,1]+1
-        Ntable[i+1,2] = Ntable[i,2]+1
-        Ntable[i+1,3] = Ntable[i,3]+1
-        Ntable[i+1,4-A1] = Ntable[i+1,4-A1]-1
-        Ntable[i+1,A1+3] = Ntable[i,A1+3]-1
+        Ntable[i+1,B_allodau1[A1]] = Ntable[i,B_allodau1[A1]]+1
+        Ntable[i+1,B_allodau2[A1]] = Ntable[i,B_allodau2[A1]]+1
+        Ntable[i+1,allo_index[A1]] = Ntable[i,allo_index[A1]]-1
         newL = newL + 1
         list0 = matrix(linlist,ncol = 2)
-        list1 = linlist[list0[,2]==A1+3]
+        list1 = linlist[list0[,2]==allo_index[A1]]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
         ranL= DDD::sample2(linlist1,1)
-        A2 = c(1,1,2)
-        A3 = c(2,3,3)
-        L[abs(ranL),5] <- A2[A1]
-        loctable[abs(ranL), A3[A1]] = 0
+        # A2 = c(1,1,2)
+        # A3 = c(2,3,3)
+        L[abs(ranL),5] <- B_allodau1[A1]
+        loctable[abs(ranL), B_allodau2[A1]] = 0
         v = which(linlist[,1] == ranL)
-        linlist[v,2] = A2[A1]
-        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,A3[A1]))
-        linlist = rbind(linlist,c(sign(ranL) * newL,A3[A1]))  
-         loc2[1,A2[A1]] = 1 
+        linlist[v,2] = B_allodau1[A1]
+        L = rbind(L,c(t[i+1],ranL,sign(ranL) * newL,-1,B_allodau2[A1]))
+        linlist = rbind(linlist,c(sign(ranL) * newL,B_allodau2[A1]))  
+         loc2[1,B_allodau1[A1]] = 1 
          loctable = rbind(loctable,loc2)
       }
      
       #Migration
       else {
-        Mig1 = c(1,1,2,2,3,3,4,5,6)
-        Mig2 = c(4,5,4,6,5,6,7,7,7)
-        Mig3 = c(2,3,1,3,1,2,3,2,1)
-        Am = A - 27
+        Mig1 = B_mig_from # c(1,1,2,2,3,3,4,5,6)
+        Mig2 =  B_mig_bec  #c(4,5,4,6,5,6,7,7,7)
+        Mig3 = B_mig_to # c(2,3,1,3,1,2,3,2,1)
+        Am = A - (probs_part1+probs_part2+probs_part3)
         b2 = Mig1[Am]
         b3 = Mig2[Am]
         Ntable=rbind(Ntable,Ntable[i,])
