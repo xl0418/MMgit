@@ -3,7 +3,8 @@
 library(DDD)
 source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
 source("/Users/mac/Dropbox/R/MMgit/event_matrix.R")
-MMM_sim<-function(n,parsN,age=100,pars ,  lambda_allo0=0.2, M0=1){
+MMM_sim<-function(n,parsN,age=20,pars ,  lambda_allo0=0.2, M0=1){
+if (length(parsN) == n){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
   while(done == 0)
@@ -143,7 +144,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   
   while(t[i+1]< age){
     i<-i+1
-    print(i)
+    # print(i)
     # speciation event & extinction event
     lambda_sym = rep(0,n)
     mu = rep(mu0,n)
@@ -190,9 +191,9 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     probs= c(prob_spec_sym,prob_ext,prob_spec_allo,prob_mig)
    
     #Total rate
-    TR=sum(probs)
+    TR =sum(probs)
     # print(which(probs == Inf))
-    if(TR==0) break
+    if(TR ==0) break
     else{
       A<-DDD::sample2(B,1, prob = probs)
       t[i+1]=t[i]+rexp(1,rate=TR)
@@ -202,7 +203,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      
       # Sympatric speciation 
       if (is.element(A,1:probs_part1)){
-        print(paste("sym spec: A =",A))
+        # print(paste("sym spec: A =",A))
         b1<-A%%n
         if(b1 == 0) b1 = n
         Ntable=rbind(Ntable,Ntable[i,])
@@ -226,7 +227,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       #Extinction
       else if(is.element(A,(probs_part1+1):(probs_part1+probs_part2))) {
-        print(paste("ext: A =",A))
+        # print(paste("ext: A =",A))
         
         b1<-A%%n
         if(b1 == 0) b1 = n
@@ -239,7 +240,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         ranL= DDD::sample2(linlist1,1)
         loctable[abs(ranL),b1] = 0
        if(is.element(A,(probs_part1+1):(probs_part1+n))){
-         print(paste("ext part1: A =",A))
+         # print(paste("ext part1: A =",A))
          
          Ntable[i+1,b3] = max(Ntable[i,b3]-1,0)
         L[abs(ranL),4] = t[i+1]
@@ -252,7 +253,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         }
        }
         else{
-          print(paste("ext part2: A =",A))
+          # print(paste("ext part2: A =",A))
           
           b2 <- B_ext[A-probs_part1]
           Ntable[i+1,b3] = Ntable[i,b3]-1
@@ -269,11 +270,11 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       
       # Allopatric speciation 
       else if(is.element(A,((probs_part1+probs_part2)+1):(probs_part1+probs_part2+probs_part3))) {
-        print(paste("allo spec: A =",A))
+        # print(paste("allo spec: A =",A))
         A1 = A - (probs_part1+probs_part2)
-        print(paste("A1 = ",A1))
-        print(prob_spec_allo)
-        print(Ntable[i,])
+        # print(paste("A1 = ",A1))
+        # print(prob_spec_allo)
+        # print(Ntable[i,])
         
         Ntable=rbind(Ntable,Ntable[i,])
         Ntable[i+1,B_allodau1[A1]] = Ntable[i,B_allodau1[A1]]+1
@@ -284,7 +285,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
         list1 = linlist[list0[,2]==allo_index[A1]]
         list2 = matrix(list1, ncol = 2)
         linlist1 = list2[,1]
-        print(paste("linlist1 = ",linlist1))
+        # print(paste("linlist1 = ",linlist1))
         ranL= DDD::sample2(linlist1,1)
         L[abs(ranL),5] <- B_allodau1[A1]
         loctable[abs(ranL), B_allodau2[A1]] = 0
@@ -298,7 +299,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      
       #Migration
       else {
-        print(paste("mig: A =",A))
+        # print(paste("mig: A =",A))
         
         Mig1 = B_mig_from # c(1,1,2,2,3,3,4,5,6)
         Mig2 =  B_mig_bec  #c(4,5,4,6,5,6,7,7,7)
@@ -327,7 +328,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
       }
       # print(Na[i+1])
       N[i+1]=sum(Ntable[i+1,])
-      print(paste("loop done for i = ",i," time = ",t[i+1]))
+      # print(paste("loop done for i = ",i," time = ",t[i+1]))
       }
   }
   
@@ -357,13 +358,16 @@ if(sum(parsN) ==2 | sum(parsN)==1){
  # print(L)
   tes = L2phylo(L,dropextinct = T)
   tas = L2phylo(L,dropextinct = F)
-  out = list(tes = tes,tas = tas,L = L, loctable = loctable)
+  out = list(tes = tes,tas = tas,L = L, loctable = loctable, Ntable = Ntable,t = t)
 #    file = paste("/Users/mac/Dropbox/R/MigrationModelsim/ModelTest/",parsN[1],parsN[2],parsN[3],"&",pars[1],pars[2],pars[3],"&",age,"sim.txt")
 #    save(out,file = file)
    return(out)
   }
   }
   else print(paste("please input 1 or 2 species in total!"))
+}
+  else print(paste("please match the length of parsN to n"))
+  
 }
 print(paste("Please input initial number of lineages of each loc with no more than 2 species in total! Match number n and dimentions of parsN "))
 

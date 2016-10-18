@@ -6,10 +6,10 @@ plottree <- function(x,num){
   # LTT plot
 if(x == 1){
   for(i in 1:100){
-  file = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+  file = paste("/Volumes/Liang/Research/data/4Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
   # file = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/out",i,"sim.Rdata",sep = "")
   load(file = file)
-  pdffilename = paste("/Volumes/Liang/Research/data/Modeltestgroup",num,"/tree",i,".pdf",sep = "")
+  pdffilename = paste("/Volumes/Liang/Research/data/4Modeltestgroup",num,"/tree",i,".pdf",sep = "")
   # pdffilename = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/tree",i,".pdf",sep = "")
   pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
   L = result$L
@@ -20,8 +20,7 @@ if(x == 1){
   # loc_lable = paste(loc[,1],loc[,2],loc[,3])
   # phy$tip.label = loc_lable
   plot(phy)
-  ltt.plot(result$tes)
-  
+  ltt.plot(result$tes,log="y")
   try(dev.off())
 
   }

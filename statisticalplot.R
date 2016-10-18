@@ -9,22 +9,22 @@ source(file = fileplot)
 # power = rep(0,40)
 p = NA
 power = NA
-for(j in 39:42){
-  file1 = paste("/Volumes/Liang/Research/data/Modeltestgroup",j,sep = "")
+for(j in 1:5){
+  file1 = paste("/Volumes/Liang/Research/data/3Modeltestgroup",j,sep = "")
   # file1 = paste(getwd(),"/Desktop/data/Modeltestgroup",j,sep = "")
 for(i in 1:100){
   if(j == 20) file = paste(file1,"/Testanalysis",i,".Rdata",sep = "")
   else file = paste(file1,"/analysis",i,".Rdata",sep = "")
   load(file = file)
   # print(paste("pvalue",i," = ",pvalue,"; poweroftest",i," = ",poweroftest,sep = "")) 
-  i <- 100*(j-39)+i
+  i <- 100*(j-1)+i
   p[i] <- pvalue
   power[i] <- poweroftest
 }
   print(length(p))
   print(length(power))
 }
-group = rep(c(0,0.1,0.3,1),each = 100)
+group = rep(c(1,0.1,0,0.3,5),each = 100)
 # group = rep(c(50,0.1,0.2,0.15,0.3,0.35,0.4,0.4,10,1,0.8,0.9,1),each = 10)
 p2 = cbind(group, p , power)
 p2 = as.data.frame(p2)
