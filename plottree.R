@@ -2,14 +2,14 @@ library(DDD)
 library(MASS)
 library(rgl)
 library(stringr)
-plottree <- function(x,num){
+plottree <- function(x,num_loc,num){
   # LTT plot
 if(x == 1){
   for(i in 1:100){
-  file = paste("/Volumes/Liang/Research/data/4Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
+  file = paste("/Volumes/Liang/Research/data/",num_loc,"Modeltestgroup",num,"/out",i,"sim.Rdata",sep = "")
   # file = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/out",i,"sim.Rdata",sep = "")
   load(file = file)
-  pdffilename = paste("/Volumes/Liang/Research/data/4Modeltestgroup",num,"/tree",i,".pdf",sep = "")
+  pdffilename = paste("/Volumes/Liang/Research/data/",num_loc,"Modeltestgroup",num,"/tree",i,".pdf",sep = "")
   # pdffilename = paste("/Users/mac/Dropbox/R/cluster/Modeltestgroupmu/tree",i,".pdf",sep = "")
   pdf(pdffilename,paper = "a4r", width = 29.7, height = 21)
   L = result$L

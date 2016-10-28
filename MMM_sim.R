@@ -11,8 +11,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
   {
   lambda0 = pars[1]
   mu0 = pars[2]
-  K = pars[3]
-  K= lambda0*K/(lambda0 - mu0)
+  K = pars[3]   # K is carrying capacity
+  K= lambda0*K/(lambda0 - mu0)  # here it is K'
   K_loc = rep(K,n)
  
   t <- 0
