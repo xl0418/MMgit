@@ -3,7 +3,7 @@
 library(DDD)
 source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
 source("/Users/mac/Dropbox/R/MMgit/event_matrix.R")
-MMM_sim<-function(n,parsN,age=20,pars ,  lambda_allo0=0.2, M0=1){
+MMM_sim<-function(n,parsN,age=20,pars , set.seed=29, lambda_allo0=0.2, M0=1){
 if (length(parsN) == n){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
@@ -105,6 +105,7 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      N_loc_col[j,] = which(Ndistribution[j,] == 1,arr.ind = TRUE)#index of each loc in sym spec table
      }
      B_symspec = c(N_loc_col)
+     
      #index for extinction
      B_ext = NULL
      x = Ndistribution
@@ -180,9 +181,9 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     # Allopatric speciation event
     lambda_allo = NULL
     for(j in allo_index){
-      Mig_base = sum(Mig_dir[which(Ndistribution[,j] == 1)])
-      if(Mig_base == 0) lambda_allo_each = 1*Ntable[i,j]
-      else lambda_allo_each = max(lambda_allo0/Mig_base, 0 )*Ntable[i,j]
+      Mig_base =  M0   # sum(Mig_dir[which(Ndistribution[,j] == 1)])
+      # if(Mig_base == 0) lambda_allo_each = 1*Ntable[i,j]
+     lambda_allo_each = max(lambda_allo0/Mig_base, 0 )*Ntable[i,j]
       lambda_allo = cbind(lambda_allo,lambda_allo_each)
     }
     prob_spec_allo = c(lambda_allo)
