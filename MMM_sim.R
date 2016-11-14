@@ -3,7 +3,8 @@
 library(DDD)
 source("/Users/mac/Dropbox/R/MMgit/Nindex.R")
 source("/Users/mac/Dropbox/R/MMgit/event_matrix.R")
-MMM_sim<-function(n,parsN,age=20,pars , set.seed=29, lambda_allo0=0.2, M0=1){
+MMM_sim<-function(n,parsN,age=20,pars , seed_fun = 29, lambda_allo0 = 0.2, M0=1){
+set.seed(seed_fun)
 if (length(parsN) == n){
 if(sum(parsN) ==2 | sum(parsN)==1){
   done = 0
@@ -125,6 +126,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      N_allo = colSums(Ndistribution)
      allo_index = which(N_allo == 2)
      allo_col = which(Ndistribution[,allo_index] == 1,arr.ind = TRUE)
+     if(is.matrix(allo_col) == FALSE)
+     {allo_col = matrix(allo_col,ncol = 2)}
      B_allospec = matrix(allo_col[,1],2)
      B_allodau1 = c(B_allospec[1,])
      B_allodau2 = c(B_allospec[2,])
@@ -182,8 +185,8 @@ if(sum(parsN) ==2 | sum(parsN)==1){
     lambda_allo = NULL
     for(j in allo_index){
       Mig_base =  M0   # sum(Mig_dir[which(Ndistribution[,j] == 1)])
-      # if(Mig_base == 0) lambda_allo_each = 1*Ntable[i,j]
-     lambda_allo_each = max(lambda_allo0/Mig_base, 0 )*Ntable[i,j]
+      if(Mig_base == 0) lambda_allo_each = 1*Ntable[i,j]
+     else lambda_allo_each = max(lambda_allo0/Mig_base, 0 )*Ntable[i,j]
       lambda_allo = cbind(lambda_allo,lambda_allo_each)
     }
     prob_spec_allo = c(lambda_allo)
