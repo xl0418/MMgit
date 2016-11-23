@@ -13,6 +13,8 @@ event_matrix = function(n){
   }
   col = col + ncol(index)
   }
-  E1 = Matrix(E1,sparse = TRUE)
+  # E1 = Matrix(E1,sparse = TRUE)
+  
+  
  return(E1)
 }

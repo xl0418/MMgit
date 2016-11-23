@@ -123,14 +123,45 @@ if(sum(parsN) ==2 | sum(parsN)==1){
      
      #index for allo speciation
      lambda_allo = NULL
+     allo_dau1 = NULL
+     allo_dau2 = NULL
+     allo_par = NULL
      N_allo = colSums(Ndistribution)
-     allo_index = which(N_allo == 2)
-     allo_col = which(Ndistribution[,allo_index] == 1,arr.ind = TRUE)
-     if(is.matrix(allo_col) == FALSE)
-     {allo_col = matrix(allo_col,ncol = 2)}
-     B_allospec = matrix(allo_col[,1],2)
-     B_allodau1 = c(B_allospec[1,])
-     B_allodau2 = c(B_allospec[2,])
+     for(j in 1:(n-1)){
+     allo_index = which(N_allo > 1 )
+     allo_matrix = Ndistribution[,allo_index,drop = FALSE]
+     allo_matrix_daughter = matrix(0,nrow = nrow(allo_matrix),ncol = ncol(allo_matrix))
+     allo_matrix_daughter1 = allo_matrix_daughter
+     allo_matrix_daughter1[1:j,] = allo_matrix[1:j,]
+     allo_matrix_daughter2 = allo_matrix
+     allo_matrix_daughter2[1:j,] = 0
+     allo_col_cut1 = which(colSums(allo_matrix_daughter1) == 0)
+     allo_col_cut2 = which(colSums(allo_matrix_daughter2) == 0)
+     allo_col_cut = c(allo_col_cut1,allo_col_cut2)
+     allo_index_final = allo_index[-allo_col_cut]
+     if(length(allo_col_cut) != 0) {
+       allo_matrix_daughter1_rest = allo_matrix_daughter1[,-allo_col_cut]
+       allo_matrix_daughter2_rest = allo_matrix_daughter2[,-allo_col_cut]
+     
+     }
+     else {
+       allo_matrix_daughter1_rest = allo_matrix_daughter1
+       allo_matrix_daughter2_rest = allo_matrix_daughter2
+     }
+     allo_dau1 = cbind(allo_dau1,allo_matrix_daughter1_rest)
+     allo_dau2 = cbind(allo_dau2,allo_matrix_daughter2_rest)
+     allo_par = c(allo_par, allo_index_final)
+     }
+     B_allodau1 = match(data.frame(allo_dau1),data.frame(Ndistribution))
+     B_allodau2 = match(data.frame(allo_dau2),data.frame(Ndistribution))
+     allo_index = allo_par
+     # 
+     # allo_col = which(Ndistribution[,allo_index] == 1,arr.ind = TRUE)
+     # if(is.matrix(allo_col) == FALSE)
+     # {allo_col = matrix(allo_col,nrow = 2)}
+     # B_allospec = matrix(allo_col[,1],nrow = 2)
+     # B_allodau1 = c(B_allospec[1,])
+     # B_allodau2 = c(B_allospec[2,])
      
      #index for migration
      B_mig_target = which(Ndistribution == 0, arr.ind = TRUE)
